@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}EnviroLedger{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <h2>EnviroLedger</h2>
+      <p>Campus Tracking</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a href="{{ url_for('dashboard') }}" class="nav-item">
+        <span class="nav-icon">📊</span><span>Dashboard</span>
+      </a>
+
+      {% if session.role in ['admin','staff'] %}
+      <div class="nav-section-label" style="margin-top:0.75rem">Data Entry</div>
+      <a href="{{ url_for('electricity') }}" class="nav-item">
+        <span class="nav-icon">⚡</span><span>Electricity</span>
+      </a>
+      <a href="{{ url_for('fuel') }}" class="nav-item">
+        <span class="nav-icon">🛢</span><span>Fuel</span>
+      </a>
+      <a href="{{ url_for('water') }}" class="nav-item">
+        <span class="nav-icon">💧</span><span>Water</span>
+      </a>
+      <a href="{{ url_for('waste') }}" class="nav-item">
+        <span class="nav-icon">🗑</span><span>Waste</span>
+      </a>
+      <a href="{{ url_for('emissions') }}" class="nav-item">
+        <span class="nav-icon">☁</span><span>Emissions</span>
+      </a>
+      {% endif %}
+
+      {% if session.role in ['admin','analyst'] %}
+      <div class="nav-section-label" style="margin-top:0.75rem">Analysis</div>
+      <a href="{{ url_for('reports') }}" class="nav-item">
+        <span class="nav-icon">📋</span><span>Reports</span>
+      </a>
+      {% endif %}
+
+      {% if session.role == 'admin' %}
+      <div class="nav-section-label" style="margin-top:0.75rem">Admin</div>
+      <a href="{{ url_for('manage_users') }}" class="nav-item">
+        <span class="nav-icon">👥</span><span>Users</span>
+      </a>
+      <a href="{{ url_for('audit') }}" class="nav-item">
+        <span class="nav-icon">🔍</span><span>Audit Log</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+        <div>
+          <div class="user-name">{{ session.username }}</div>
+          <div class="user-role">{{ session.role }}</div>
+        </div>
+      </div>
+      <a href="{{ url_for('logout') }}" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:0.8rem;padding:0.5rem">
+        ⏻ Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    {% for cat, msg in get_flashed_messages(with_categories=True) %}
+    <div class="alert alert-{{ cat }}">{{ '✓' if cat == 'success' else '⚠' }} {{ msg }}</div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

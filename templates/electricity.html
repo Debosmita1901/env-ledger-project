@@ -1,0 +1,70 @@
+{% extends "index.html" %}
+{% block title %}Electricity – EnviroLedger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>⚡ Electricity Consumption</h1>
+  <p>Log electricity usage in kilowatt-hours (kWh)</p>
+</div>
+
+<div class="entry-layout">
+  <!-- Form -->
+  <div class="card">
+    <div class="card-title">➕ Add Entry</div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Consumption (kWh) *</label>
+        <input type="number" name="value" step="0.01" min="0" placeholder="e.g. 450.5" required>
+      </div>
+      <div class="form-group">
+        <label>Notes / Location</label>
+        <textarea name="notes" placeholder="e.g. Building A – Main Panel"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">⚡ Log Entry</button>
+    </form>
+
+    <div style="margin-top:1.5rem; padding:1rem; background:var(--bg); border-radius:8px;">
+      <div style="font-size:0.75rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Carbon Factor</div>
+      <div style="font-size:1.1rem; font-weight:700; color:#fbbf24;">0.82 kg CO₂e / kWh</div>
+      <div style="font-size:0.8rem; color:var(--muted); margin-top:0.25rem;">Grid average emission factor</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-title">📋 Ledger</div>
+    {% if entries %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Value (kWh)</th>
+            <th>CO₂e (kg)</th>
+            <th>Notes</th>
+            <th>Logged by</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+          <tr>
+            <td class="text-muted mono">{{ e.id }}</td>
+            <td class="mono" style="color:#fbbf24;font-weight:600">{{ e.value }}</td>
+            <td class="mono text-accent">{{ (e.value * 0.82)|round(3) }}</td>
+            <td class="text-muted" style="font-size:0.85rem">{{ e.notes or '—' }}</td>
+            <td>{{ e.username }}</td>
+            <td class="text-muted mono" style="font-size:0.8rem">{{ e.timestamp[:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">⚡</div>
+      <p>No entries yet. Add your first electricity reading.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

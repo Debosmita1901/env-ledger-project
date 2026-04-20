@@ -1,0 +1,74 @@
+{% extends "index.html" %}
+{% block title %}Waste – EnviroLedger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🗑 Waste Management</h1>
+  <p>Log waste generation in kilograms</p>
+</div>
+
+<div class="entry-layout">
+  <div class="card">
+    <div class="card-title">➕ Add Entry</div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Weight (kg) *</label>
+        <input type="number" name="value" step="0.01" min="0" placeholder="e.g. 85.5" required>
+      </div>
+      <div class="form-group">
+        <label>Waste Type *</label>
+        <select name="category" required>
+          <option value="">Select type…</option>
+          <option value="general">General Waste</option>
+          <option value="recyclable">Recyclable</option>
+          <option value="organic">Organic / Food</option>
+          <option value="hazardous">Hazardous</option>
+          <option value="e-waste">E-Waste</option>
+          <option value="paper">Paper / Cardboard</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location / Notes</label>
+        <input type="text" name="notes" placeholder="e.g. Hostel Block – Weekly Collection">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">🗑 Log Entry</button>
+    </form>
+
+    <div style="margin-top:1.5rem; padding:1rem; background:var(--bg); border-radius:8px;">
+      <div style="font-size:0.75rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Carbon Factor</div>
+      <div style="font-size:1.1rem; font-weight:700; color:#a78bfa;">0.50 kg CO₂e / kg</div>
+      <div style="font-size:0.8rem; color:var(--muted); margin-top:0.25rem;">Landfill decomposition average</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Ledger</div>
+    {% if entries %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Weight (kg)</th><th>CO₂e (kg)</th><th>Type</th><th>Notes</th><th>Logged by</th><th>Timestamp</th></tr>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+          <tr>
+            <td class="text-muted mono">{{ e.id }}</td>
+            <td class="mono" style="color:#a78bfa;font-weight:600">{{ e.value }}</td>
+            <td class="mono text-accent">{{ (e.value * 0.5)|round(3) }}</td>
+            <td>{% if e.category %}<span class="badge" style="background:#a78bfa20;color:#a78bfa">{{ e.category }}</span>{% else %}—{% endif %}</td>
+            <td class="text-muted" style="font-size:0.85rem">{{ e.notes or '—' }}</td>
+            <td>{{ e.username }}</td>
+            <td class="text-muted mono" style="font-size:0.8rem">{{ e.timestamp[:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🗑</div>
+      <p>No entries yet. Add your first waste record.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

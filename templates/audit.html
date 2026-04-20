@@ -1,0 +1,64 @@
+{% extends "index.html" %}
+{% block title %}Audit Log – EnviroLedger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🔍 Audit Log</h1>
+  <p>Complete trail of all system actions (admin only)</p>
+</div>
+
+<div class="card">
+  <div class="card-title" style="justify-content:space-between">
+    <span>📜 System Events</span>
+    <span class="text-muted" style="font-size:0.8rem;font-weight:400">Last 200 events</span>
+  </div>
+  {% if logs %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-muted mono">{{ log.id }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#0d1117;flex-shrink:0">
+                {{ log.username[0].upper() }}
+              </div>
+              {{ log.username }}
+            </div>
+          </td>
+          <td>
+            {% set action_lower = log.action.lower() %}
+            {% if 'login' in action_lower %}
+              <span class="badge badge-login">{{ log.action }}</span>
+            {% elif 'logout' in action_lower %}
+              <span class="badge badge-logout">{{ log.action }}</span>
+            {% elif 'add' in action_lower %}
+              <span class="badge badge-add">{{ log.action }}</span>
+            {% else %}
+              <span class="badge" style="background:var(--surface2);color:var(--text)">{{ log.action }}</span>
+            {% endif %}
+          </td>
+          <td class="text-muted" style="font-size:0.85rem">{{ log.details or '—' }}</td>
+          <td class="text-muted mono" style="font-size:0.8rem">{{ log.timestamp[:19] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <p>No audit events recorded yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

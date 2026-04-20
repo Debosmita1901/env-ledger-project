@@ -1,0 +1,71 @@
+{% extends "index.html" %}
+{% block title %}Emissions – EnviroLedger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>☁ Emissions</h1>
+  <p>Log direct CO₂ emissions in kilograms</p>
+</div>
+
+<div class="entry-layout">
+  <div class="card">
+    <div class="card-title">➕ Add Entry</div>
+    <form method="POST">
+      <div class="form-group">
+        <label>CO₂ Amount (kg) *</label>
+        <input type="number" name="value" step="0.01" min="0" placeholder="e.g. 230.0" required>
+      </div>
+      <div class="form-group">
+        <label>Emission Source</label>
+        <select name="category">
+          <option value="">Select source…</option>
+          <option value="transport">Campus Transport</option>
+          <option value="hvac">HVAC Systems</option>
+          <option value="lab">Laboratory Operations</option>
+          <option value="canteen">Canteen / Kitchen</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description / Notes</label>
+        <textarea name="notes" placeholder="e.g. Bus fleet monthly emissions"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">☁ Log Entry</button>
+    </form>
+
+    <div style="margin-top:1.5rem; padding:1rem; background:var(--bg); border-radius:8px;">
+      <div style="font-size:0.75rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Note</div>
+      <div style="font-size:0.85rem; color:var(--muted);">Direct emissions are recorded as-is (1:1 ratio). Values represent measured or estimated CO₂ releases.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Ledger</div>
+    {% if entries %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>CO₂ (kg)</th><th>Source</th><th>Notes</th><th>Logged by</th><th>Timestamp</th></tr>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+          <tr>
+            <td class="text-muted mono">{{ e.id }}</td>
+            <td class="mono" style="color:#ef4444;font-weight:600">{{ e.value }}</td>
+            <td>{% if e.category %}<span class="badge badge-emissions">{{ e.category }}</span>{% else %}—{% endif %}</td>
+            <td class="text-muted" style="font-size:0.85rem">{{ e.notes or '—' }}</td>
+            <td>{{ e.username }}</td>
+            <td class="text-muted mono" style="font-size:0.8rem">{{ e.timestamp[:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">☁</div>
+      <p>No emission records yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "index.html" %}
+{% block title %}Users – EnviroLedger{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>👥 User Management</h1>
+  <p>Create and manage user accounts</p>
+</div>
+
+<div class="grid-2">
+  <!-- Add User -->
+  <div class="card">
+    <div class="card-title">➕ Add New User</div>
+    <form method="POST">
+      <input type="hidden" name="action" value="add">
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" name="username" placeholder="e.g. jdoe" required>
+      </div>
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" name="password" placeholder="Minimum 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label>Role *</label>
+        <select name="role" required>
+          <option value="staff">Staff</option>
+          <option value="analyst">Analyst</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">👤 Create User</button>
+    </form>
+  </div>
+
+  <!-- Role Explanation -->
+  <div class="card">
+    <div class="card-title">ℹ Role Permissions</div>
+    <div style="display:grid;gap:0.75rem">
+      <div style="padding:0.9rem;background:var(--bg);border-radius:8px;border-left:3px solid var(--accent)">
+        <div style="font-weight:600;margin-bottom:0.3rem"><span class="badge badge-admin">admin</span></div>
+        <div style="font-size:0.83rem;color:var(--muted)">Full access – data entry, reports, audit logs, user management</div>
+      </div>
+      <div style="padding:0.9rem;background:var(--bg);border-radius:8px;border-left:3px solid var(--accent2)">
+        <div style="font-weight:600;margin-bottom:0.3rem"><span class="badge badge-staff">staff</span></div>
+        <div style="font-size:0.83rem;color:var(--muted)">Add data entries (electricity, fuel, water, waste, emissions). View own entries only.</div>
+      </div>
+      <div style="padding:0.9rem;background:var(--bg);border-radius:8px;border-left:3px solid var(--warn)">
+        <div style="font-weight:600;margin-bottom:0.3rem"><span class="badge badge-analyst">analyst</span></div>
+        <div style="font-size:0.83rem;color:var(--muted)">Read-only access to all data. Generate reports and carbon footprint analysis.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+  <div class="card-title" style="justify-content:space-between">
+    <span>📋 All Users</span>
+    <span class="text-muted" style="font-size:0.8rem;font-weight:400">{{ users|length }} accounts</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="text-muted mono">{{ u.id }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#0d1117">
+                {{ u.username[0].upper() }}
+              </div>
+              <strong>{{ u.username }}</strong>
+              {% if u.id == session.user_id %}<span style="font-size:0.72rem;color:var(--muted)">(you)</span>{% endif %}
+            </div>
+          </td>
+          <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+          <td class="text-muted mono" style="font-size:0.8rem">{{ u.created_at[:10] if u.created_at else '—' }}</td>
+          <td>
+            {% if u.id != session.user_id %}
+            <form method="POST" style="display:inline">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="user_id" value="{{ u.id }}">
+              <button type="submit" class="btn btn-danger" style="padding:0.35rem 0.75rem;font-size:0.8rem"
+                data-confirm="Delete user '{{ u.username }}'? This cannot be undone.">
+                🗑 Delete
+              </button>
+            </form>
+            {% else %}
+            <span class="text-muted" style="font-size:0.8rem">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

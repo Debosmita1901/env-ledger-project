@@ -1,0 +1,193 @@
+{% extends "index.html" %}
+{% block title %}Dashboard – EnviroLedger{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📊 Dashboard</h1>
+  <p>Campus environmental resource overview</p>
+</div>
+
+<!-- Carbon Banner -->
+<div class="carbon-banner">
+  <div>
+    <h2>Total Carbon Footprint</h2>
+    <div class="big">{{ total_carbon }} <span style="font-size:1.2rem;font-weight:500">kg CO₂e</span></div>
+    <div class="sub">Cumulative across all resource categories</div>
+  </div>
+  <div class="icon">🌍</div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stats-grid">
+  <div class="stat-card green">
+    <div class="stat-icon">⚡</div>
+    <div class="stat-label">Electricity</div>
+    <div class="stat-value">{{ totals.electricity }} <span class="stat-unit">kWh</span></div>
+    <div class="stat-carbon">≈ {{ (totals.electricity * 0.82)|round(2) }} kg CO₂e</div>
+  </div>
+  <div class="stat-card yellow">
+    <div class="stat-icon">🛢</div>
+    <div class="stat-label">Fuel</div>
+    <div class="stat-value">{{ totals.fuel }} <span class="stat-unit">L</span></div>
+    <div class="stat-carbon">≈ {{ (totals.fuel * 2.31)|round(2) }} kg CO₂e</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon">💧</div>
+    <div class="stat-label">Water</div>
+    <div class="stat-value">{{ totals.water }} <span class="stat-unit">L</span></div>
+    <div class="stat-carbon">≈ {{ (totals.water * 0.001)|round(3) }} kg CO₂e</div>
+  </div>
+  <div class="stat-card" style="--color:#a78bfa">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#a78bfa"></div>
+    <div class="stat-icon">🗑</div>
+    <div class="stat-label">Waste</div>
+    <div class="stat-value">{{ totals.waste }} <span class="stat-unit">kg</span></div>
+    <div class="stat-carbon" style="color:#a78bfa">≈ {{ (totals.waste * 0.5)|round(2) }} kg CO₂e</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon">☁</div>
+    <div class="stat-label">Emissions</div>
+    <div class="stat-value">{{ totals.emissions }} <span class="stat-unit">kg</span></div>
+    <div class="stat-carbon" style="color:#ef4444">Direct emission</div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">⚡ Electricity Trend</div>
+    <div class="chart-box"><canvas id="chartElec"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🛢 Fuel Trend</div>
+    <div class="chart-box"><canvas id="chartFuel"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">💧 Water Trend</div>
+    <div class="chart-box"><canvas id="chartWater"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🗑 Waste Trend</div>
+    <div class="chart-box"><canvas id="chartWaste"></canvas></div>
+  </div>
+</div>
+
+<!-- Resource breakdown donut -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">🌡 Carbon Footprint Breakdown</div>
+    <div class="chart-box"><canvas id="chartDonut"></canvas></div>
+  </div>
+
+  <!-- Recent entries -->
+  <div class="card">
+    <div class="card-title">🕐 Recent Entries</div>
+    {% if recent %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Value</th><th>User</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+          {% for e in recent %}
+          <tr>
+            <td><span class="badge badge-{{ e.type }}">{{ e.type }}</span></td>
+            <td class="mono">{{ e.value }}</td>
+            <td>{{ e.username }}</td>
+            <td class="text-muted" style="font-size:0.8rem">{{ e.timestamp[:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>No entries yet. Start adding data!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const monthly = {{ monthly|tojson }};
+
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e', font: { size: 11 } } },
+    y: { grid: { color: '#21262d' }, ticks: { color: '#8b949e', font: { size: 11 } } }
+  }
+};
+
+function makeLine(id, data, color, label) {
+  const labels = data.map(d => d.month || 'N/A');
+  const vals = data.map(d => d.total);
+  new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data: vals,
+        borderColor: color,
+        backgroundColor: color + '18',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: color,
+        pointRadius: 4
+      }]
+    },
+    options: chartDefaults
+  });
+}
+
+makeLine('chartElec', monthly.electricity, '#fbbf24', 'kWh');
+makeLine('chartFuel', monthly.fuel, '#f97316', 'Liters');
+makeLine('chartWater', monthly.water, '#0ea5e9', 'Liters');
+makeLine('chartWaste', monthly.waste, '#a78bfa', 'kg');
+
+// Donut
+const totals = {{ totals|tojson }};
+const carbonData = [
+  totals.electricity * 0.82,
+  totals.fuel * 2.31,
+  totals.water * 0.001,
+  totals.waste * 0.5,
+  totals.emissions * 1.0
+];
+new Chart(document.getElementById('chartDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Electricity', 'Fuel', 'Water', 'Waste', 'Emissions'],
+    datasets: [{
+      data: carbonData,
+      backgroundColor: ['#fbbf24', '#f97316', '#0ea5e9', '#a78bfa', '#ef4444'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { color: '#8b949e', font: { size: 12 }, padding: 12 }
+      }
+    },
+    cutout: '68%'
+  }
+});
+</script>
+{% endblock %}

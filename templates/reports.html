@@ -1,0 +1,148 @@
+{% extends "index.html" %}
+{% block title %}Reports – EnviroLedger{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>📋 Environmental Reports</h1>
+  <p>Filter, analyze and export ledger data</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid" style="margin-bottom:1.5rem;">
+  {% for t, s in summary.items() %}
+  <div class="stat-card {% if t=='electricity' %}green{% elif t=='fuel' %}yellow{% elif t=='water' %}blue{% elif t=='emissions' %}red{% endif %}">
+    <div class="stat-label">{{ t }}</div>
+    <div class="stat-value">{{ s.total }}</div>
+    <div class="stat-carbon">{{ s.count }} records · {{ s.carbon }} kg CO₂e</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Filter Bar -->
+<div class="card">
+  <div class="card-title">🔍 Filter</div>
+  <form method="GET">
+    <div class="filter-bar">
+      <div class="form-group">
+        <label>Resource Type</label>
+        <select name="type">
+          <option value="">All Types</option>
+          <option value="electricity" {% if type_filter=='electricity' %}selected{% endif %}>⚡ Electricity</option>
+          <option value="fuel" {% if type_filter=='fuel' %}selected{% endif %}>🛢 Fuel</option>
+          <option value="water" {% if type_filter=='water' %}selected{% endif %}>💧 Water</option>
+          <option value="waste" {% if type_filter=='waste' %}selected{% endif %}>🗑 Waste</option>
+          <option value="emissions" {% if type_filter=='emissions' %}selected{% endif %}>☁ Emissions</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;gap:0.5rem;">
+        <button type="submit" class="btn btn-primary">🔍 Apply</button>
+        <a href="{{ url_for('reports') }}" class="btn btn-ghost">✕ Clear</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Bar Chart -->
+<div class="card">
+  <div class="card-title">📊 Carbon Footprint by Category (Total)</div>
+  <div class="chart-box">
+    <canvas id="barChart"></canvas>
+  </div>
+</div>
+
+<!-- Data Table -->
+<div class="card">
+  <div class="card-title" style="justify-content:space-between">
+    <span>📄 Ledger Entries</span>
+    <span class="text-muted" style="font-size:0.8rem;font-weight:400">{{ entries|length }} records</span>
+  </div>
+
+  {% if entries %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Type</th>
+          <th>Value</th>
+          <th>CO₂e (kg)</th>
+          <th>Category</th>
+          <th>Notes</th>
+          <th>Logged By</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in entries %}
+        <tr>
+          <td class="text-muted mono">{{ e.id }}</td>
+          <td><span class="badge badge-{{ e.type }}">{{ e.type }}</span></td>
+          <td class="mono font-bold">{{ e.value }}</td>
+          <td class="mono text-accent">
+            {% if e.type == 'electricity' %}{{ (e.value*0.82)|round(3) }}
+            {% elif e.type == 'fuel' %}{{ (e.value*2.31)|round(3) }}
+            {% elif e.type == 'water' %}{{ (e.value*0.001)|round(4) }}
+            {% elif e.type == 'waste' %}{{ (e.value*0.5)|round(3) }}
+            {% else %}{{ e.value }}{% endif %}
+          </td>
+          <td>{{ e.category or '—' }}</td>
+          <td class="text-muted" style="font-size:0.83rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ e.notes or '—' }}</td>
+          <td>{{ e.username }}</td>
+          <td class="text-muted mono" style="font-size:0.8rem">{{ e.timestamp[:16] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <p>No records match your filters.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const summary = {{ summary|tojson }};
+const labels = Object.keys(summary);
+const carbonVals = labels.map(k => summary[k].carbon);
+const colors = ['#fbbf24','#f97316','#0ea5e9','#a78bfa','#ef4444'];
+
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: {
+    labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+    datasets: [{
+      label: 'CO₂e (kg)',
+      data: carbonVals,
+      backgroundColor: colors,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } },
+      y: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } }
+    }
+  }
+});
+</script>
+{% endblock %}
