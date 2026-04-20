@@ -370,8 +370,9 @@ def chart_data():
         data[t] = [{'month': r['month'], 'total': round(r['total'], 2)} for r in rows]
     conn.close()
     return jsonify(data)
+init_db()
 
 if __name__ == '__main__':
-    init_db()
+    
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
